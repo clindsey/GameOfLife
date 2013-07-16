@@ -1,1 +1,0 @@
-../../../bower_components/chai/chai.js
