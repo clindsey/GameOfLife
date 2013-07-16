@@ -1,7 +1,7 @@
 {
-  "author": "Your Name",
-  "name": "package-name",
-  "description": "Package description",
+  "author": "Chris Lindsey",
+  "name": "GameOfLife",
+  "description": "conway's game of life with easel",
   "version": "0.0.1",
   "homepage": "",
   "repository": {
