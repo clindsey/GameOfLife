@@ -1,26 +1,37 @@
-module.exports = class CellView
-  styles:
-    width: 10
-    height: 10
-    fill: "#ccc"
-    stroke: "#f00"
+module.exports = gamecore.DualPooled.extend 'CellView',
+  {
+    create: (model) ->
+      cell = @_super()
+      cell.el = new createjs.Shape
 
-  constructor: (@model) ->
-    @el = new createjs.Shape
+      cell.model = model
 
-    @drawingInstructions()
+      cell.styles = {
+        width: 10
+        height: 10
+        fill: "#ccc"
+        stroke: "#666"
+      }
 
-    @el.x = @styles.width * @model.x
-    @el.y = @styles.height * @model.y
+      cell.drawingInstructions()
 
-  drawingInstructions: ->
-    width = @styles.width
-    height = @styles.height
+      cell.el.x = cell.styles.width * model.x
+      cell.el.y = cell.styles.height * model.y
 
-    graphics = @el.graphics
+      cell
+  }, {
+    drawingInstructions: ->
+      width = @styles.width
+      height = @styles.height
 
-    graphics.beginFill @styles.fill
-    graphics.setStrokeStyle 0.5
-    graphics.beginStroke @styles.stroke
-    graphics.drawRect 0, 0, width, height
-    graphics.endFill()
+      graphics = @el.graphics
+
+      graphics.beginFill @styles.fill
+      graphics.setStrokeStyle 0.5
+      graphics.beginStroke @styles.stroke
+      graphics.drawRect 0, 0, width, height
+      graphics.endFill()
+
+    dispose: ->
+      @release()
+  }

@@ -1,20 +1,33 @@
-module.exports = class Environment
-  length: 0
+module.exports = gamecore.DualPooled.extend 'EnvironmentModel',
+  {
+    create: (width, height) ->
+      environment = @_super()
+      environment.cellLookup = {}
+      environment.width = width
+      environment.height = height
+      environment.length = 0
 
-  constructor: (@width, @height) ->
-    @cellLookup = {}
+      environment
+  }, {
+    dispose: ->
+      for id, cell of @cellLookup
+        if cell.dispose
+          cell.dispose()
 
-  addCell: (cell, silent = false) ->
-    if @cellLookup["#{cell.x}_#{cell.y}"] is undefined
-      @cellLookup["#{cell.x}_#{cell.y}"] = cell
+      @release()
 
-      @length += 1
+    addCell: (cell, silent = false) ->
+      if @cellLookup["#{cell.x}_#{cell.y}"] is undefined
+        @cellLookup["#{cell.x}_#{cell.y}"] = cell
 
-      unless silent
-        jQuery(window).trigger "!cellAdded", [cell]
+        @length += 1
 
-  getCellAt: (x, y) ->
-    @cellLookup["#{@clamp(x, @width)}_#{@clamp(y, @height)}"]
+        unless silent
+          jQuery(window).trigger "!cellAdded", [cell]
 
-  clamp: (val, limit) ->
-    (val + limit) % limit
+    getCellAt: (x, y) ->
+      @cellLookup["#{@clamp(x, @width)}_#{@clamp(y, @height)}"]
+
+    clamp: (val, limit) ->
+      (val + limit) % limit
+  }

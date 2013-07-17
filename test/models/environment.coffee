@@ -4,9 +4,14 @@ describe "Model Environment", ->
   beforeEach ->
     @environmentWidth = 20
     @environmentHeight = 20
-    @environment = new EnvironmentModel @environmentWidth, @environmentHeight
+    @environment = EnvironmentModel.create @environmentWidth, @environmentHeight
 
     @item = {x: 0, y: 0}
+
+  afterEach ->
+    @environment.dispose()
+
+    expect(EnvironmentModel.getPool().usedList.length()).to.equal 0
 
   it "should add and retreive items", ->
     @environment.addCell @item

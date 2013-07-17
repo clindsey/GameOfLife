@@ -10,12 +10,13 @@ module.exports = class StageView
 
     _.bindAll @, "onTick"
 
-    createjs.Ticker.setFPS 4
+    createjs.Ticker.setFPS 10
+    createjs.Ticker.useRAF = true
 
     createjs.Ticker.addEventListener "tick", @onTick
 
-    @boardModel = new BoardModel 48, 32
-    boardView = new BoardView @boardModel
+    @boardModel = BoardModel.create 48, 32
+    boardView = BoardView.create @boardModel
 
     @populateBoard()
 
@@ -30,7 +31,7 @@ module.exports = class StageView
       for x in [0..width - 1]
         seed = (Math.random() * 10) > 8
 
-        cells.addCell new CellModel x, y if seed
+        cells.addCell CellModel.create x, y if seed
 
   onTick: ->
     @boardModel.spawn()

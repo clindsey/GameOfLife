@@ -1,10 +1,18 @@
 BoardModel = require "models/Board"
 CellModel = require "models/Cell"
+EnvironmentModel = require "models/Environment"
 
 describe "Model Board", ->
   beforeEach ->
-    @board = new BoardModel 20, 20
+    @board = BoardModel.create 20, 20
     @liveCells = @board.liveCells
+
+  afterEach ->
+    @board.dispose()
+
+    expect(BoardModel.getPool().usedList.length()).to.equal 0
+    expect(CellModel.getPool().usedList.length()).to.equal 0
+    expect(EnvironmentModel.getPool().usedList.length()).to.equal 0
 
   it "should contain no live cells when created", ->
     expect(@liveCells.length).to.equal 0
@@ -16,7 +24,7 @@ describe "Model Board", ->
 
   it "should fire a cellAdded event when a cell is added", ->
     wasCalled = false
-    newCell = new CellModel 2, 2
+    newCell = CellModel.create 2, 2
 
     jQuery(window).bind "!cellAdded", (jqEvent, cell) ->
       wasCalled = true if cell is newCell
@@ -27,7 +35,7 @@ describe "Model Board", ->
 
   it "should fire a cellRemoved event when a cell is removed", ->
     wasCalled = false
-    newCell = new CellModel 2, 2
+    newCell = CellModel.create 2, 2
 
     jQuery(window).bind "!cellRemoved", (jqEvent, cell) ->
       wasCalled = true if cell is newCell
@@ -39,23 +47,32 @@ describe "Model Board", ->
     expect(wasCalled).to.equal true
 
   it "should spawn no live cells if seeded with one cell", ->
-    @liveCells.addCell new CellModel 2, 2
+    newCell = CellModel.create 2, 2
+    @liveCells.addCell newCell
     @board.spawn()
 
     expect(@board.liveCells.length).to.equal 0
 
   it "should spawn no live cells if seeded with two neighboring cells", ->
-    @liveCells.addCell new CellModel 2, 2
-    @liveCells.addCell new CellModel 2, 3
+    newCellA = CellModel.create 2, 2
+    newCellB = CellModel.create 2, 3
+
+    @liveCells.addCell newCellA
+    @liveCells.addCell newCellB
     @board.spawn()
 
     expect(@board.liveCells.length).to.equal 0
 
   it "should exhibit the block pattern", ->
-    @liveCells.addCell new CellModel 2, 2
-    @liveCells.addCell new CellModel 2, 3
-    @liveCells.addCell new CellModel 3, 2
-    @liveCells.addCell new CellModel 3, 3
+    newCellA = CellModel.create 2, 2
+    newCellB = CellModel.create 2, 3
+    newCellC = CellModel.create 3, 2
+    newCellD = CellModel.create 3, 3
+
+    @liveCells.addCell newCellA
+    @liveCells.addCell newCellB
+    @liveCells.addCell newCellC
+    @liveCells.addCell newCellD
     @board.spawn()
 
     @liveCells = @board.liveCells
@@ -68,9 +85,13 @@ describe "Model Board", ->
     expect(@liveCells.getCellAt 3, 3).to.not.equal undefined
 
   it "should exhibit blinker pattern", ->
-    @liveCells.addCell new CellModel 2, 2
-    @liveCells.addCell new CellModel 2, 3
-    @liveCells.addCell new CellModel 2, 4
+    newCellA = CellModel.create 2, 2
+    newCellB = CellModel.create 2, 3
+    newCellC = CellModel.create 2, 4
+
+    @liveCells.addCell newCellA
+    @liveCells.addCell newCellB
+    @liveCells.addCell newCellC
     @board.spawn()
 
     @liveCells = @board.liveCells
