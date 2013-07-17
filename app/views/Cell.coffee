@@ -17,6 +17,10 @@ module.exports = gamecore.DualPooled.extend 'CellView',
       cell.el.x = cell.styles.width * model.x
       cell.el.y = cell.styles.height * model.y
 
+      _.bindAll cell, "onTick"
+
+      cell.el.addEventListener "tick", cell.onTick
+
       cell
   }, {
     drawingInstructions: ->
@@ -28,6 +32,12 @@ module.exports = gamecore.DualPooled.extend 'CellView',
       graphics.beginFill @styles.fill
       graphics.drawRect 0, 0, width, height
       graphics.endFill()
+
+    onTick: ->
+      fillColor = (100 + ~~((@model.neighborCount / 3) * 155)).toString(16)
+      @styles.fill = "##{fillColor}#{fillColor}#{fillColor}"
+
+      @drawingInstructions()
 
     dispose: ->
       @release()
