@@ -21,7 +21,7 @@ module.exports = class StageView
     @populateBoard()
 
     background = new createjs.Shape()
-    background.graphics.beginFill("#dedede").drawRect 0, 0, 480, 320
+    background.graphics.beginFill("#b5d1f6").drawRect 0, 0, 480, 320
     @el.addChild background
 
     @el.addChild boardView.el

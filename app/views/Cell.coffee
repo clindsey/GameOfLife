@@ -9,8 +9,7 @@ module.exports = gamecore.DualPooled.extend 'CellView',
       cell.styles = {
         width: 10
         height: 10
-        fill: "#ccc"
-        stroke: "#666"
+        fill: "##{(Math.random()*0xFFFFFF<<0).toString(16)}"
       }
 
       cell.drawingInstructions()
@@ -27,8 +26,6 @@ module.exports = gamecore.DualPooled.extend 'CellView',
       graphics = @el.graphics
 
       graphics.beginFill @styles.fill
-      graphics.setStrokeStyle 0.5
-      graphics.beginStroke @styles.stroke
       graphics.drawRect 0, 0, width, height
       graphics.endFill()
 
