@@ -28,7 +28,7 @@ module.exports = class StageView
 
     for y in [0..height - 1]
       for x in [0..width - 1]
-        seed = (Math.random() * 10) > 8 ? true : false
+        seed = (Math.random() * 10) > 8
 
         cells.addCell new CellModel x, y if seed
 

@@ -13,16 +13,16 @@ module.exports = class BoardView
 
   onCellAdded: (jqEvent, model) ->
     cellView = new CellView model
-    @cells[model.x + "_" + model.y] = cellView
+    @cells["#{model.x}_#{model.y}"] = cellView
 
     @el.addChild cellView.el
 
   onCellRemoved: (jqEvent, model) ->
-    cellView = @cells[model.x + "_" + model.y]
+    cellView = @cells["#{model.x}_#{model.y}"]
 
     @el.removeChild cellView.el
 
-    @cells[model.x + "_" + model.y] = undefined
+    @cells["#{model.x}_#{model.y}"] = undefined
 
   dispose: ->
     jQuery(window).unbind "!cellAdded", @onCellAdded

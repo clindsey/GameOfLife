@@ -17,8 +17,10 @@ module.exports = class CellView
     width = @styles.width
     height = @styles.height
 
-    @el.graphics.beginFill @styles.fill
-    @el.graphics.setStrokeStyle 0.5
-    @el.graphics.beginStroke @styles.stroke
-    @el.graphics.drawRect 0, 0, width, height
-    @el.graphics.endFill()
+    graphics = @el.graphics
+
+    graphics.beginFill @styles.fill
+    graphics.setStrokeStyle 0.5
+    graphics.beginStroke @styles.stroke
+    graphics.drawRect 0, 0, width, height
+    graphics.endFill()

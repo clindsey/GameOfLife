@@ -3,7 +3,7 @@ module.exports = class Cell
 
   canSurviveIn: (environment) ->
     neighborCount = @numberOfNeighborsIn environment
-    neighborCount is 2 || neighborCount is 3 ? true : false
+    2 <= neighborCount <= 3
 
   numberOfNeighborsIn: (environment) ->
     result = 0
