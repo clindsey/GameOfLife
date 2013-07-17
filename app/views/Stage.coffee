@@ -10,7 +10,7 @@ module.exports = class StageView
 
     _.bindAll @, "onTick"
 
-    createjs.Ticker.setFPS 10
+    createjs.Ticker.setFPS 4
     createjs.Ticker.useRAF = true
 
     createjs.Ticker.addEventListener "tick", @onTick
