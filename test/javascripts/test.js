@@ -91,16 +91,24 @@ window.require.register("test/initialize", function(exports, require, module) {
   
 });
 window.require.register("test/models/board", function(exports, require, module) {
-  var BoardModel, CellModel;
+  var BoardModel, CellModel, EnvironmentModel;
 
   BoardModel = require("models/Board");
 
   CellModel = require("models/Cell");
 
+  EnvironmentModel = require("models/Environment");
+
   describe("Model Board", function() {
     beforeEach(function() {
-      this.board = new BoardModel(20, 20);
+      this.board = BoardModel.create(20, 20);
       return this.liveCells = this.board.liveCells;
+    });
+    afterEach(function() {
+      this.board.dispose();
+      expect(BoardModel.getPool().usedList.length()).to.equal(0);
+      expect(CellModel.getPool().usedList.length()).to.equal(0);
+      return expect(EnvironmentModel.getPool().usedList.length()).to.equal(0);
     });
     it("should contain no live cells when created", function() {
       return expect(this.liveCells.length).to.equal(0);
@@ -112,7 +120,7 @@ window.require.register("test/models/board", function(exports, require, module) 
     it("should fire a cellAdded event when a cell is added", function() {
       var newCell, wasCalled;
       wasCalled = false;
-      newCell = new CellModel(2, 2);
+      newCell = CellModel.create(2, 2);
       jQuery(window).bind("!cellAdded", function(jqEvent, cell) {
         if (cell === newCell) {
           return wasCalled = true;
@@ -124,7 +132,7 @@ window.require.register("test/models/board", function(exports, require, module) 
     it("should fire a cellRemoved event when a cell is removed", function() {
       var newCell, wasCalled;
       wasCalled = false;
-      newCell = new CellModel(2, 2);
+      newCell = CellModel.create(2, 2);
       jQuery(window).bind("!cellRemoved", function(jqEvent, cell) {
         if (cell === newCell) {
           return wasCalled = true;
@@ -135,21 +143,31 @@ window.require.register("test/models/board", function(exports, require, module) 
       return expect(wasCalled).to.equal(true);
     });
     it("should spawn no live cells if seeded with one cell", function() {
-      this.liveCells.addCell(new CellModel(2, 2));
+      var newCell;
+      newCell = CellModel.create(2, 2);
+      this.liveCells.addCell(newCell);
       this.board.spawn();
       return expect(this.board.liveCells.length).to.equal(0);
     });
     it("should spawn no live cells if seeded with two neighboring cells", function() {
-      this.liveCells.addCell(new CellModel(2, 2));
-      this.liveCells.addCell(new CellModel(2, 3));
+      var newCellA, newCellB;
+      newCellA = CellModel.create(2, 2);
+      newCellB = CellModel.create(2, 3);
+      this.liveCells.addCell(newCellA);
+      this.liveCells.addCell(newCellB);
       this.board.spawn();
       return expect(this.board.liveCells.length).to.equal(0);
     });
     it("should exhibit the block pattern", function() {
-      this.liveCells.addCell(new CellModel(2, 2));
-      this.liveCells.addCell(new CellModel(2, 3));
-      this.liveCells.addCell(new CellModel(3, 2));
-      this.liveCells.addCell(new CellModel(3, 3));
+      var newCellA, newCellB, newCellC, newCellD;
+      newCellA = CellModel.create(2, 2);
+      newCellB = CellModel.create(2, 3);
+      newCellC = CellModel.create(3, 2);
+      newCellD = CellModel.create(3, 3);
+      this.liveCells.addCell(newCellA);
+      this.liveCells.addCell(newCellB);
+      this.liveCells.addCell(newCellC);
+      this.liveCells.addCell(newCellD);
       this.board.spawn();
       this.liveCells = this.board.liveCells;
       expect(this.liveCells.length).to.equal(4);
@@ -159,9 +177,13 @@ window.require.register("test/models/board", function(exports, require, module) 
       return expect(this.liveCells.getCellAt(3, 3)).to.not.equal(void 0);
     });
     return it("should exhibit blinker pattern", function() {
-      this.liveCells.addCell(new CellModel(2, 2));
-      this.liveCells.addCell(new CellModel(2, 3));
-      this.liveCells.addCell(new CellModel(2, 4));
+      var newCellA, newCellB, newCellC;
+      newCellA = CellModel.create(2, 2);
+      newCellB = CellModel.create(2, 3);
+      newCellC = CellModel.create(2, 4);
+      this.liveCells.addCell(newCellA);
+      this.liveCells.addCell(newCellB);
+      this.liveCells.addCell(newCellC);
       this.board.spawn();
       this.liveCells = this.board.liveCells;
       expect(this.liveCells.length).to.equal(3);
@@ -181,45 +203,83 @@ window.require.register("test/models/cell", function(exports, require, module) {
 
   describe("Model Cell", function() {
     beforeEach(function() {
-      this.environment = new EnvironmentModel(20, 20);
-      this.targetCell = new CellModel(2, 2);
-      this.nCell = new CellModel(2, 1);
-      this.nwCell = new CellModel(1, 1);
-      this.sCell = new CellModel(2, 3);
-      this.seCell = new CellModel(3, 3);
-      this.eCell = new CellModel(3, 2);
-      return this.wCell = new CellModel(1, 2);
+      this.environment = EnvironmentModel.create(20, 20);
+      this.targetCell = CellModel.create(2, 2);
+      this.nCell = CellModel.create(2, 1);
+      this.nwCell = CellModel.create(1, 1);
+      this.sCell = CellModel.create(2, 3);
+      this.seCell = CellModel.create(3, 3);
+      this.eCell = CellModel.create(3, 2);
+      return this.wCell = CellModel.create(1, 2);
+    });
+    afterEach(function() {
+      this.environment.dispose();
+      expect(EnvironmentModel.getPool().usedList.length()).to.equal(0);
+      return expect(CellModel.getPool().usedList.length()).to.equal(0);
     });
     it("should die if alone", function() {
-      return expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      this.targetCell.dispose();
+      this.nCell.dispose();
+      this.nwCell.dispose();
+      this.sCell.dispose();
+      this.seCell.dispose();
+      this.eCell.dispose();
+      return this.wCell.dispose();
     });
     it("should die if one neighbor", function() {
       this.environment.addCell(this.nCell);
-      return expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      this.targetCell.dispose();
+      this.nwCell.dispose();
+      this.sCell.dispose();
+      this.seCell.dispose();
+      this.eCell.dispose();
+      return this.wCell.dispose();
     });
     it("should know how many neighbors it has", function() {
+      var anotherCell;
+      anotherCell = CellModel.create(12, 13);
       this.environment.addCell(this.nCell);
       this.environment.addCell(this.nwCell);
-      this.environment.addCell(new CellModel(12, 13));
-      return expect(this.targetCell.numberOfNeighborsIn(this.environment)).to.equal(2);
+      this.environment.addCell(anotherCell);
+      expect(this.targetCell.numberOfNeighborsIn(this.environment)).to.equal(2);
+      this.targetCell.dispose();
+      this.sCell.dispose();
+      this.seCell.dispose();
+      this.eCell.dispose();
+      return this.wCell.dispose();
     });
     it("should not be a neighbor of itself", function() {
       this.environment.addCell(this.targetCell);
-      return expect(this.targetCell.numberOfNeighborsIn(this.environment)).to.equal(0);
+      expect(this.targetCell.numberOfNeighborsIn(this.environment)).to.equal(0);
+      this.nCell.dispose();
+      this.nwCell.dispose();
+      this.sCell.dispose();
+      this.seCell.dispose();
+      this.eCell.dispose();
+      return this.wCell.dispose();
     });
     it("should survive if two or three neighbors", function() {
       this.environment.addCell(this.sCell);
       this.environment.addCell(this.wCell);
       expect(this.targetCell.canSurviveIn(this.environment)).to.equal(true);
       this.environment.addCell(this.nCell);
-      return expect(this.targetCell.canSurviveIn(this.environment)).to.equal(true);
+      expect(this.targetCell.canSurviveIn(this.environment)).to.equal(true);
+      this.targetCell.dispose();
+      this.nwCell.dispose();
+      this.seCell.dispose();
+      return this.eCell.dispose();
     });
     return it("should die if four neighbors", function() {
       this.environment.addCell(this.nCell);
       this.environment.addCell(this.eCell);
       this.environment.addCell(this.nwCell);
       this.environment.addCell(this.seCell);
-      return expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      expect(this.targetCell.canSurviveIn(this.environment)).to.equal(false);
+      this.targetCell.dispose();
+      this.sCell.dispose();
+      return this.wCell.dispose();
     });
   });
   
@@ -233,11 +293,15 @@ window.require.register("test/models/environment", function(exports, require, mo
     beforeEach(function() {
       this.environmentWidth = 20;
       this.environmentHeight = 20;
-      this.environment = new EnvironmentModel(this.environmentWidth, this.environmentHeight);
+      this.environment = EnvironmentModel.create(this.environmentWidth, this.environmentHeight);
       return this.item = {
         x: 0,
         y: 0
       };
+    });
+    afterEach(function() {
+      this.environment.dispose();
+      return expect(EnvironmentModel.getPool().usedList.length()).to.equal(0);
     });
     it("should add and retreive items", function() {
       this.environment.addCell(this.item);
@@ -265,7 +329,7 @@ window.require.register("test/models/environment", function(exports, require, mo
   
 });
 window.require.register("test/views/board", function(exports, require, module) {
-  var BoardModel, BoardView, CellModel;
+  var BoardModel, BoardView, CellModel, CellView, EnvironmentModel;
 
   BoardView = require("views/Board");
 
@@ -273,24 +337,34 @@ window.require.register("test/views/board", function(exports, require, module) {
 
   CellModel = require("models/Cell");
 
+  EnvironmentModel = require("models/Environment");
+
+  CellView = require("views/Cell");
+
   describe("View Board", function() {
     beforeEach(function() {
-      this.boardModel = new BoardModel(20, 20);
-      return this.boardView = new BoardView(this.boardModel);
+      this.boardModel = BoardModel.create(20, 20);
+      return this.boardView = BoardView.create(this.boardModel);
     });
     afterEach(function() {
-      return this.boardView.dispose();
+      this.boardView.dispose();
+      this.boardModel.dispose();
+      expect(BoardView.getPool().usedList.length()).to.equal(0);
+      expect(BoardModel.getPool().usedList.length()).to.equal(0);
+      expect(CellModel.getPool().usedList.length()).to.equal(0);
+      expect(EnvironmentModel.getPool().usedList.length()).to.equal(0);
+      return expect(CellView.getPool().usedList.length()).to.equal(0);
     });
     it("should add cell views for board", function() {
       var liveCells;
       liveCells = this.boardModel.liveCells;
-      liveCells.addCell(new CellModel(1, 1));
+      liveCells.addCell(CellModel.create(1, 1));
       return expect(this.boardView.el.children.length).to.equal(1);
     });
     return it("should remove cells from board when they die", function() {
       var liveCells;
       liveCells = this.boardModel.liveCells;
-      liveCells.addCell(new CellModel(3, 6));
+      liveCells.addCell(CellModel.create(3, 6));
       expect(this.boardView.el.children.length).to.equal(1);
       this.boardModel.spawn();
       return expect(this.boardView.el.children.length).to.equal(0);

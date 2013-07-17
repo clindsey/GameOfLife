@@ -109,29 +109,34 @@ window.require.register("initialize", function(exports, require, module) {
   
 });
 window.require.register("models/Board", function(exports, require, module) {
-  var Board, CellModel, EnvironmentModel;
+  var CellModel, EnvironmentModel;
 
   EnvironmentModel = require("models/Environment");
 
   CellModel = require("models/Cell");
 
-  module.exports = Board = (function() {
-    Board.prototype.liveCells = void 0;
-
-    function Board(width, height) {
-      this.width = width;
-      this.height = height;
-      this.liveCells = new EnvironmentModel(this.width, this.height);
+  module.exports = gamecore.DualPooled.extend('BoardModel', {
+    create: function(width, height) {
+      var board;
+      board = this._super();
+      board.liveCells = EnvironmentModel.create(width, height);
+      board.width = width;
+      board.height = height;
+      return board;
     }
-
-    Board.prototype.spawn = function() {
+  }, {
+    dispose: function() {
+      this.liveCells.dispose();
+      return this.release();
+    },
+    spawn: function() {
       var nextGeneration;
-      nextGeneration = new EnvironmentModel(this.width, this.height);
+      nextGeneration = EnvironmentModel.create(this.width, this.height);
       this.putNextGenerationOfCellsIn(nextGeneration);
+      this.liveCells.dispose();
       return this.liveCells = nextGeneration;
-    };
-
-    Board.prototype.putNextGenerationOfCellsIn = function(nextGeneration) {
+    },
+    putNextGenerationOfCellsIn: function(nextGeneration) {
       var x, y, _i, _ref, _results;
       _results = [];
       for (y = _i = 0, _ref = this.height - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; y = 0 <= _ref ? ++_i : --_i) {
@@ -145,46 +150,46 @@ window.require.register("models/Board", function(exports, require, module) {
         }).call(this));
       }
       return _results;
-    };
-
-    Board.prototype.processGridPosition = function(x, y, nextGeneration) {
+    },
+    processGridPosition: function(x, y, nextGeneration) {
       var cell, currentCell;
-      cell = new CellModel(x, y);
+      cell = CellModel.create(x, y);
       currentCell = this.liveCells.getCellAt(x, y);
       if (currentCell) {
         if (cell.canSurviveIn(this.liveCells)) {
           return nextGeneration.addCell(cell, true);
         } else {
-          return jQuery(window).trigger("!cellRemoved", [currentCell]);
+          jQuery(window).trigger("!cellRemoved", [currentCell]);
+          return cell.dispose();
         }
       } else if (cell.numberOfNeighborsIn(this.liveCells) === 3) {
         return nextGeneration.addCell(cell);
+      } else {
+        return cell.dispose();
       }
-    };
-
-    return Board;
-
-  })();
+    }
+  });
   
 });
 window.require.register("models/Cell", function(exports, require, module) {
-  var Cell;
-
-  module.exports = Cell = (function() {
-    function Cell(x, y) {
-      this.x = x;
-      this.y = y;
+  module.exports = gamecore.DualPooled.extend('CellModel', {
+    create: function(x, y) {
+      var cell;
+      cell = this._super();
+      cell.x = x;
+      cell.y = y;
+      return cell;
     }
-
-    Cell.prototype.canSurviveIn = function(environment) {
-      var neighborCount, _ref;
+  }, {
+    dispose: function() {
+      return this.release();
+    },
+    canSurviveIn: function(environment) {
+      var neighborCount;
       neighborCount = this.numberOfNeighborsIn(environment);
-      return (_ref = neighborCount === 2 || neighborCount === 3) != null ? _ref : {
-        "true": false
-      };
-    };
-
-    Cell.prototype.numberOfNeighborsIn = function(environment) {
+      return (2 <= neighborCount && neighborCount <= 3);
+    },
+    numberOfNeighborsIn: function(environment) {
       var result;
       result = 0;
       if (environment.getCellAt(this.x, this.y + 1)) {
@@ -212,124 +217,137 @@ window.require.register("models/Cell", function(exports, require, module) {
         result++;
       }
       return result;
-    };
-
-    return Cell;
-
-  })();
+    }
+  });
   
 });
 window.require.register("models/Environment", function(exports, require, module) {
-  var Environment;
-
-  module.exports = Environment = (function() {
-    Environment.prototype.length = 0;
-
-    function Environment(width, height) {
-      this.width = width;
-      this.height = height;
-      this.cellLookup = {};
+  module.exports = gamecore.DualPooled.extend('EnvironmentModel', {
+    create: function(width, height) {
+      var environment;
+      environment = this._super();
+      environment.cellLookup = {};
+      environment.width = width;
+      environment.height = height;
+      environment.length = 0;
+      return environment;
     }
-
-    Environment.prototype.addCell = function(cell, silent) {
+  }, {
+    dispose: function() {
+      var cell, id, _ref;
+      _ref = this.cellLookup;
+      for (id in _ref) {
+        cell = _ref[id];
+        if (cell.dispose) {
+          cell.dispose();
+        }
+      }
+      return this.release();
+    },
+    addCell: function(cell, silent) {
       if (silent == null) {
         silent = false;
       }
-      if (this.cellLookup[cell.x + "_" + cell.y] === void 0) {
-        this.cellLookup[cell.x + "_" + cell.y] = cell;
+      if (this.cellLookup["" + cell.x + "_" + cell.y] === void 0) {
+        this.cellLookup["" + cell.x + "_" + cell.y] = cell;
         this.length += 1;
         if (!silent) {
           return jQuery(window).trigger("!cellAdded", [cell]);
         }
       }
-    };
-
-    Environment.prototype.getCellAt = function(x, y) {
-      return this.cellLookup[this.clamp(x, this.width) + "_" + this.clamp(y, this.height)];
-    };
-
-    Environment.prototype.clamp = function(val, limit) {
+    },
+    getCellAt: function(x, y) {
+      return this.cellLookup["" + (this.clamp(x, this.width)) + "_" + (this.clamp(y, this.height))];
+    },
+    clamp: function(val, limit) {
       return (val + limit) % limit;
-    };
-
-    return Environment;
-
-  })();
+    }
+  });
   
 });
 window.require.register("views/Board", function(exports, require, module) {
-  var BoardView, CellView;
+  var CellView;
 
   CellView = require("views/Cell");
 
-  module.exports = BoardView = (function() {
-    BoardView.prototype.cells = {};
-
-    function BoardView(model) {
-      this.model = model;
-      this.el = new createjs.Container;
-      _.bindAll(this, "onCellAdded", "onCellRemoved");
-      jQuery(window).bind("!cellAdded", this.onCellAdded);
-      jQuery(window).bind("!cellRemoved", this.onCellRemoved);
+  module.exports = gamecore.DualPooled.extend('BoardView', {
+    create: function(model) {
+      var board;
+      board = this._super();
+      board.model = model;
+      board.cells = {};
+      board.el = new createjs.Container;
+      _.bindAll(board, "onCellAdded", "onCellRemoved");
+      jQuery(window).bind("!cellAdded", board.onCellAdded);
+      jQuery(window).bind("!cellRemoved", board.onCellRemoved);
+      return board;
     }
-
-    BoardView.prototype.onCellAdded = function(jqEvent, model) {
+  }, {
+    onCellAdded: function(jqEvent, model) {
       var cellView;
-      cellView = new CellView(model);
-      this.cells[model.x + "_" + model.y] = cellView;
+      cellView = CellView.create(model);
+      this.cells["" + model.x + "_" + model.y] = cellView;
       return this.el.addChild(cellView.el);
-    };
-
-    BoardView.prototype.onCellRemoved = function(jqEvent, model) {
+    },
+    onCellRemoved: function(jqEvent, model) {
       var cellView;
-      cellView = this.cells[model.x + "_" + model.y];
-      this.el.removeChild(cellView.el);
-      return this.cells[model.x + "_" + model.y] = void 0;
-    };
-
-    BoardView.prototype.dispose = function() {
+      cellView = this.cells["" + model.x + "_" + model.y];
+      if (cellView && cellView.el) {
+        this.el.removeChild(cellView.el);
+      }
+      cellView.dispose();
+      return this.cells["" + model.x + "_" + model.y] = void 0;
+    },
+    dispose: function() {
+      var cell, key, _ref;
       jQuery(window).unbind("!cellAdded", this.onCellAdded);
-      return jQuery(window).unbind("!cellRemoved", this.onCellRemoved);
-    };
-
-    return BoardView;
-
-  })();
+      jQuery(window).unbind("!cellRemoved", this.onCellRemoved);
+      _ref = this.cells;
+      for (key in _ref) {
+        cell = _ref[key];
+        if (cell) {
+          cell.dispose();
+        }
+      }
+      return this.release();
+    }
+  });
   
 });
 window.require.register("views/Cell", function(exports, require, module) {
-  var CellView;
-
-  module.exports = CellView = (function() {
-    CellView.prototype.styles = {
-      width: 10,
-      height: 10,
-      fill: "#ccc",
-      stroke: "#f00"
-    };
-
-    function CellView(model) {
-      this.model = model;
-      this.el = new createjs.Shape;
-      this.drawingInstructions();
-      this.el.x = this.styles.width * this.model.x;
-      this.el.y = this.styles.height * this.model.y;
+  module.exports = gamecore.DualPooled.extend('CellView', {
+    create: function(model) {
+      var cell;
+      cell = this._super();
+      cell.el = new createjs.Shape;
+      cell.model = model;
+      cell.styles = {
+        width: 10,
+        height: 10,
+        fill: "#ccc",
+        stroke: "#666"
+      };
+      cell.drawingInstructions();
+      cell.el.x = cell.styles.width * model.x;
+      cell.el.y = cell.styles.height * model.y;
+      return cell;
     }
-
-    CellView.prototype.drawingInstructions = function() {
-      var height, width;
+  }, {
+    drawingInstructions: function() {
+      var graphics, height, width;
       width = this.styles.width;
       height = this.styles.height;
-      this.el.graphics.beginFill(this.styles.fill);
-      this.el.graphics.setStrokeStyle(0.5);
-      this.el.graphics.beginStroke(this.styles.stroke);
-      this.el.graphics.drawRect(0, 0, width, height);
-      return this.el.graphics.endFill();
-    };
-
-    return CellView;
-
-  })();
+      graphics = this.el.graphics;
+      graphics.beginFill(this.styles.fill);
+      graphics.setStrokeStyle(0.5);
+      graphics.beginStroke(this.styles.stroke);
+      graphics.drawRect(0, 0, width, height);
+      return graphics.endFill();
+    },
+    dispose: function() {
+      return this.release();
+    }
+  });
   
 });
 window.require.register("views/Stage", function(exports, require, module) {
@@ -349,9 +367,10 @@ window.require.register("views/Stage", function(exports, require, module) {
       this.el.update();
       _.bindAll(this, "onTick");
       createjs.Ticker.setFPS(4);
+      createjs.Ticker.useRAF = true;
       createjs.Ticker.addEventListener("tick", this.onTick);
-      this.boardModel = new BoardModel(48, 32);
-      boardView = new BoardView(this.boardModel);
+      this.boardModel = BoardModel.create(48, 32);
+      boardView = BoardView.create(this.boardModel);
       this.populateBoard();
       this.el.addChild(boardView.el);
     }
@@ -364,14 +383,12 @@ window.require.register("views/Stage", function(exports, require, module) {
       _results = [];
       for (y = _i = 0, _ref = height - 1; 0 <= _ref ? _i <= _ref : _i >= _ref; y = 0 <= _ref ? ++_i : --_i) {
         _results.push((function() {
-          var _j, _ref1, _ref2, _results1;
+          var _j, _ref1, _results1;
           _results1 = [];
           for (x = _j = 0, _ref1 = width - 1; 0 <= _ref1 ? _j <= _ref1 : _j >= _ref1; x = 0 <= _ref1 ? ++_j : --_j) {
-            seed = (_ref2 = (Math.random() * 10) > 8) != null ? _ref2 : {
-              "true": false
-            };
+            seed = (Math.random() * 10) > 8;
             if (seed) {
-              _results1.push(cells.addCell(new CellModel(x, y)));
+              _results1.push(cells.addCell(CellModel.create(x, y)));
             } else {
               _results1.push(void 0);
             }
