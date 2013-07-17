@@ -10,7 +10,7 @@ module.exports = class StageView
 
     _.bindAll @, "onTick"
 
-    createjs.Ticker.setFPS 4
+    createjs.Ticker.setFPS 20
     createjs.Ticker.useRAF = true
 
     createjs.Ticker.addEventListener "tick", @onTick
@@ -19,6 +19,10 @@ module.exports = class StageView
     boardView = BoardView.create @boardModel
 
     @populateBoard()
+
+    background = new createjs.Shape()
+    background.graphics.beginFill("#dedede").drawRect 0, 0, 480, 320
+    @el.addChild background
 
     @el.addChild boardView.el
 

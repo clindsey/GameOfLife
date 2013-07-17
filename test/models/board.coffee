@@ -26,7 +26,7 @@ describe "Model Board", ->
     wasCalled = false
     newCell = CellModel.create 2, 2
 
-    jQuery(window).bind "!cellAdded", (jqEvent, cell) ->
+    EventBus.addEventListener "!cellAdded", (jqEvent, cell) ->
       wasCalled = true if cell is newCell
 
     @liveCells.addCell newCell
@@ -37,7 +37,7 @@ describe "Model Board", ->
     wasCalled = false
     newCell = CellModel.create 2, 2
 
-    jQuery(window).bind "!cellRemoved", (jqEvent, cell) ->
+    EventBus.addEventListener "!cellRemoved", (jqEvent, cell) ->
       wasCalled = true if cell is newCell
 
     @liveCells.addCell newCell

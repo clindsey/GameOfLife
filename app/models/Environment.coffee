@@ -23,7 +23,7 @@ module.exports = gamecore.DualPooled.extend 'EnvironmentModel',
         @length += 1
 
         unless silent
-          jQuery(window).trigger "!cellAdded", [cell]
+          EventBus.dispatch "!cellAdded", @, cell
 
     getCellAt: (x, y) ->
       @cellLookup["#{@clamp(x, @width)}_#{@clamp(y, @height)}"]

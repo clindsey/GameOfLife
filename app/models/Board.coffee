@@ -38,7 +38,7 @@ module.exports = gamecore.DualPooled.extend 'BoardModel',
         if cell.canSurviveIn @liveCells
           nextGeneration.addCell cell, true
         else
-          jQuery(window).trigger "!cellRemoved", [currentCell]
+          EventBus.dispatch "!cellRemoved", @, currentCell
           cell.dispose()
       else if cell.numberOfNeighborsIn(@liveCells) is 3
         nextGeneration.addCell cell

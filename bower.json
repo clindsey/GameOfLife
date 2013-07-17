@@ -17,6 +17,7 @@
     "sinonjs": "~1.7.1",
     "sinon-chai": "~2.4.0",
     "EaselJS": "latest",
-    "gamecore.js": "https://github.com/playcraft/gamecore.js.git"
+    "gamecore.js": "https://github.com/playcraft/gamecore.js.git",
+    "EventBus": "https://github.com/krasimir/EventBus.git"
   }
 }

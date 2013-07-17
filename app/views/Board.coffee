@@ -10,8 +10,8 @@ module.exports = gamecore.DualPooled.extend 'BoardView',
       board.el = new createjs.Container
       _.bindAll board, "onCellAdded", "onCellRemoved"
 
-      jQuery(window).bind "!cellAdded", board.onCellAdded
-      jQuery(window).bind "!cellRemoved", board.onCellRemoved
+      EventBus.addEventListener "!cellAdded", board.onCellAdded, board
+      EventBus.addEventListener "!cellRemoved", board.onCellRemoved, board
 
       board
   }, {
@@ -32,8 +32,8 @@ module.exports = gamecore.DualPooled.extend 'BoardView',
       @cells["#{model.x}_#{model.y}"] = undefined
 
     dispose: ->
-      jQuery(window).unbind "!cellAdded", @onCellAdded
-      jQuery(window).unbind "!cellRemoved", @onCellRemoved
+      EventBus.removeEventListener "!cellAdded", @onCellAdded, @
+      EventBus.removeEventListener "!cellRemoved", @onCellRemoved, @
 
       for key, cell of @cells
         if cell
