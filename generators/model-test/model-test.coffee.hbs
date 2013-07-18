@@ -1,0 +1,8 @@
+{{#camelize}}{{name}}{{/camelize}}Model = require "models/{{#camelize}}{{name}}{{/camelize}}"
+
+describe "Model {{#camelize}}{{name}}{{/camelize}}", ->
+  beforeEach ->
+    @model = {{#camelize}}{{name}}{{/camelize}}Model.create()
+
+  afterEach ->
+    @model.dispose()

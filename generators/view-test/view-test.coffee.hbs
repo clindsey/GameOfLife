@@ -1,0 +1,8 @@
+{{#camelize}}{{name}}{{/camelize}}View = require "views/{{#camelize}}{{name}}{{/camelize}}"
+
+describe "View {{#camelize}}{{name}}{{/camelize}}", ->
+  beforeEach ->
+    @view = {{#camelize}}{{name}}{{/camelize}}View.create()
+
+  afterEach ->
+    @view.dispose()

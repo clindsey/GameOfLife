@@ -1,4 +1,6 @@
-module.exports = gamecore.DualPooled.extend 'CellModel',
+Model = require "models/base/Model"
+
+module.exports = Model.extend 'CellModel',
   {
     create: (x, y) ->
       cell = @_super()
@@ -7,9 +9,6 @@ module.exports = gamecore.DualPooled.extend 'CellModel',
 
       cell
   }, {
-    dispose: ->
-      @release()
-
     canSurviveIn: (environment) ->
       neighborCount = @numberOfNeighborsIn environment
       2 <= neighborCount <= 3

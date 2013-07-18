@@ -1,6 +1,7 @@
 CellView = require "views/Cell"
+View = require "views/base/View"
 
-module.exports = gamecore.DualPooled.extend 'BoardView',
+module.exports = View.extend 'BoardView',
   {
     create: (model) ->
       board = @_super()
@@ -39,5 +40,5 @@ module.exports = gamecore.DualPooled.extend 'BoardView',
         if cell
           cell.dispose()
 
-      @release()
+      @_super()
   }

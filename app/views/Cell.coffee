@@ -1,4 +1,6 @@
-module.exports = gamecore.DualPooled.extend 'CellView',
+View = require "views/base/View"
+
+module.exports = View.extend 'CellView',
   {
     create: (model) ->
       cell = @_super()
@@ -28,7 +30,4 @@ module.exports = gamecore.DualPooled.extend 'CellView',
       graphics.beginFill @styles.fill
       graphics.drawRect 0, 0, width, height
       graphics.endFill()
-
-    dispose: ->
-      @release()
   }

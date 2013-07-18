@@ -1,4 +1,6 @@
-module.exports = gamecore.DualPooled.extend 'EnvironmentModel',
+Model = require "models/base/Model"
+
+module.exports = Model.extend 'EnvironmentModel',
   {
     create: (width, height) ->
       environment = @_super()
@@ -14,7 +16,7 @@ module.exports = gamecore.DualPooled.extend 'EnvironmentModel',
         if cell.dispose
           cell.dispose()
 
-      @release()
+      @_super()
 
     addCell: (cell, silent = false) ->
       if @cellLookup["#{cell.x}_#{cell.y}"] is undefined

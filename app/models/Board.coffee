@@ -1,7 +1,8 @@
 EnvironmentModel = require "models/Environment"
 CellModel = require "models/Cell"
+Model = require "models/base/Model"
 
-module.exports = gamecore.DualPooled.extend 'BoardModel',
+module.exports = Model.extend 'BoardModel',
   {
     create: (width, height) ->
       board = @_super()
@@ -15,7 +16,7 @@ module.exports = gamecore.DualPooled.extend 'BoardModel',
     dispose: ->
       @liveCells.dispose()
 
-      @release()
+      @_super()
 
     spawn: ->
       nextGeneration = EnvironmentModel.create @width, @height
